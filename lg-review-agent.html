@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LG TV Review Agent</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #06080f;
+      --surface: #0d1117;
+      --surface2: #161b27;
+      --border: #1e2535;
+      --accent: #e8212b;
+      --accent2: #ff6b35;
+      --text: #d4daf0;
+      --muted: #4a5270;
+      --green: #00e676;
+      --yellow: #ffd740;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
+
+    /* BG pattern */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: radial-gradient(circle at 20% 50%, rgba(232,33,43,0.04) 0%, transparent 60%),
+                        radial-gradient(circle at 80% 20%, rgba(255,107,53,0.03) 0%, transparent 50%);
+      pointer-events: none; z-index: 0;
+    }
+
+    .wrap { position: relative; z-index: 1; max-width: 860px; margin: 0 auto; padding: 0 24px 60px; }
+
+    /* HEADER */
+    header { padding: 40px 0 32px; border-bottom: 1px solid var(--border); margin-bottom: 32px; }
+    .header-top { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+    .logo-box {
+      width: 52px; height: 52px; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px;
+      box-shadow: 0 0 24px rgba(232,33,43,0.3);
+    }
+    h1 { font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: 2px; color: #fff; line-height: 1; }
+    h1 span { color: var(--accent); }
+    .tagline { color: var(--muted); font-size: 13px; margin-top: 4px; }
+    .stats-row { display: flex; gap: 24px; flex-wrap: wrap; }
+    .stat { }
+    .stat-val { font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 600; color: var(--accent); }
+    .stat-lbl { font-size: 11px; color: var(--muted); margin-top: 1px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* SEARCH PANEL */
+    .search-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin-bottom: 24px; }
+    .panel-title { font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 16px; }
+
+    .model-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin-bottom: 16px; }
+    .model-btn {
+      cursor: pointer; padding: 9px 12px; border-radius: 8px;
+      border: 1px solid var(--border); background: var(--surface2);
+      color: var(--muted); font-family: 'JetBrains Mono', monospace; font-size: 12px;
+      transition: all 0.18s; text-align: center;
+    }
+    .model-btn:hover { border-color: var(--accent); color: var(--text); }
+    .model-btn.active { background: rgba(232,33,43,0.12); border-color: var(--accent); color: #fff; }
+
+    .custom-row { display: flex; gap: 10px; margin-bottom: 16px; }
+    .custom-input {
+      flex: 1; background: var(--surface2); border: 1px solid var(--border);
+      color: var(--text); padding: 10px 14px; border-radius: 8px;
+      font-family: 'DM Sans', sans-serif; font-size: 14px; outline: none;
+      transition: border-color 0.2s;
+    }
+    .custom-input:focus { border-color: var(--accent); }
+    .custom-input::placeholder { color: var(--muted); }
+
+    .sort-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .sort-lbl { font-size: 12px; color: var(--muted); margin-right: 4px; }
+    .sort-btn {
+      cursor: pointer; padding: 6px 14px; border-radius: 20px;
+      border: 1px solid var(--border); background: var(--surface2);
+      color: var(--muted); font-size: 12px; transition: all 0.18s;
+    }
+    .sort-btn:hover { border-color: var(--accent2); color: var(--text); }
+    .sort-btn.active { border-color: var(--accent2); background: rgba(255,107,53,0.12); color: var(--accent2); }
+
+    .search-btn {
+      width: 100%; margin-top: 16px; padding: 13px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border: none; border-radius: 10px; color: #fff;
+      font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 2px;
+      cursor: pointer; transition: opacity 0.2s, transform 0.1s;
+      box-shadow: 0 4px 20px rgba(232,33,43,0.25);
+    }
+    .search-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+    .search-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    /* STATUS */
+    .status-bar {
+      font-family: 'JetBrains Mono', monospace; font-size: 12px;
+      color: var(--muted); padding: 10px 14px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; margin-bottom: 20px;
+      display: none; align-items: center; gap: 8px;
+    }
+    .status-bar.show { display: flex; }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); animation: pulse 1s infinite; flex-shrink: 0; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+    /* REVIEW CARDS */
+    .reviews-wrap { display: flex; flex-direction: column; gap: 14px; }
+
+    .review-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 20px 22px;
+      animation: slideUp 0.35s ease both;
+      transition: border-color 0.2s;
+    }
+    .review-card:hover { border-color: #2e3650; }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+    .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+    .card-left { flex: 1; }
+    .product-name { font-size: 13px; font-weight: 600; color: var(--accent2); font-family: 'JetBrains Mono', monospace; margin-bottom: 4px; }
+    .review-title { font-size: 15px; font-weight: 600; color: #fff; line-height: 1.3; }
+    .star-row { display: flex; gap: 2px; margin-top: 6px; }
+    .star { color: var(--yellow); font-size: 14px; }
+    .star.empty { color: var(--border); }
+
+    .sentiment-badge {
+      padding: 4px 10px; border-radius: 20px; font-size: 11px;
+      font-family: 'JetBrains Mono', monospace; white-space: nowrap; flex-shrink: 0;
+    }
+    .sentiment-badge.pos { background: rgba(0,230,118,0.1); border: 1px solid rgba(0,230,118,0.3); color: var(--green); }
+    .sentiment-badge.neu { background: rgba(255,215,64,0.1); border: 1px solid rgba(255,215,64,0.3); color: var(--yellow); }
+    .sentiment-badge.neg { background: rgba(232,33,43,0.1); border: 1px solid rgba(232,33,43,0.3); color: var(--accent); }
+
+    .review-body { font-size: 14px; line-height: 1.65; color: #9aa3c0; margin-bottom: 14px; }
+
+    .card-meta { display: flex; gap: 16px; font-size: 12px; color: var(--muted); flex-wrap: wrap; }
+    .meta-item { display: flex; align-items: center; gap: 5px; }
+
+    .pros-cons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+    .pc-box { background: var(--surface2); border-radius: 8px; padding: 10px 12px; }
+    .pc-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; font-family: 'JetBrains Mono', monospace; margin-bottom: 6px; }
+    .pc-label.pro { color: var(--green); }
+    .pc-label.con { color: var(--accent); }
+    .pc-item { font-size: 12px; color: #8a93b0; padding: 2px 0; }
+    .pc-item::before { content: '• '; }
+
+    /* SUMMARY BOX */
+    .summary-box {
+      background: var(--surface); border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 12px; padding: 20px 22px; margin-bottom: 20px;
+      display: none;
+    }
+    .summary-box.show { display: block; }
+    .summary-title { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 1.5px; color: var(--accent); margin-bottom: 10px; }
+    .summary-text { font-size: 14px; line-height: 1.7; color: #9aa3c0; }
+
+    /* SCORE BAR */
+    .score-bars { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+    .score-row { display: flex; align-items: center; gap: 10px; }
+    .score-label { font-size: 12px; color: var(--muted); width: 90px; flex-shrink: 0; }
+    .score-track { flex: 1; height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+    .score-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 3px; transition: width 0.8s ease; }
+    .score-val { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent2); width: 30px; text-align: right; }
+
+    /* EMPTY / ERROR */
+    .msg-box { text-align: center; padding: 50px 20px; }
+    .msg-icon { font-size: 40px; margin-bottom: 12px; }
+    .msg-text { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--muted); }
+    .msg-sub { font-size: 12px; color: #303755; margin-top: 6px; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-top">
+      <div class="logo-box">📺</div>
+      <div>
+        <h1>LG TV <span>REVIEW</span> AGENT</h1>
+        <div class="tagline">Amazon 리뷰 AI 분석 에이전트 · Powered by Claude</div>
+      </div>
+    </div>
+    <div class="stats-row">
+      <div class="stat"><div class="stat-val" id="s-count">0</div><div class="stat-lbl">수집된 리뷰</div></div>
+      <div class="stat"><div class="stat-val" id="s-avg">-</div><div class="stat-lbl">평균 평점</div></div>
+      <div class="stat"><div class="stat-val" id="s-pos">-</div><div class="stat-lbl">긍정 비율</div></div>
+      <div class="stat"><div class="stat-val" id="s-model">-</div><div class="stat-lbl">검색 모델</div></div>
+    </div>
+  </header>
+
+  <!-- SEARCH PANEL -->
+  <div class="search-panel">
+    <div class="panel-title">// 제품 선택</div>
+
+    <div class="model-grid" id="model-grid"></div>
+
+    <div class="custom-row">
+      <input class="custom-input" id="custom-input" placeholder="직접 입력: 예) LG C4 OLED 65인치" />
+    </div>
+
+    <div class="sort-row">
+      <span class="sort-lbl">정렬:</span>
+      <button class="sort-btn active" data-sort="recent">최신순</button>
+      <button class="sort-btn" data-sort="helpful">도움됨순</button>
+      <button class="sort-btn" data-sort="critical">비판적</button>
+      <button class="sort-btn" data-sort="positive">긍정적</button>
+    </div>
+
+    <button class="search-btn" id="search-btn" onclick="searchReviews()">
+      🔍 리뷰 수집 시작
+    </button>
+  </div>
+
+  <!-- STATUS -->
+  <div class="status-bar" id="status-bar">
+    <div class="status-dot"></div>
+    <span id="status-text">Claude가 Amazon 리뷰를 검색 중...</span>
+  </div>
+
+  <!-- SUMMARY -->
+  <div class="summary-box" id="summary-box">
+    <div class="summary-title">📊 종합 분석</div>
+    <div class="summary-text" id="summary-text"></div>
+    <div class="score-bars" id="score-bars"></div>
+  </div>
+
+  <!-- REVIEWS -->
+  <div id="reviews-area">
+    <div class="msg-box">
+      <div class="msg-icon">🎯</div>
+      <div class="msg-text">위에서 LG TV 모델을 선택하고 리뷰 수집을 시작하세요</div>
+      <div class="msg-sub">Claude AI가 Amazon 실제 리뷰를 검색·분석합니다</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const MODELS = [
+  "LG C4 OLED 65\"",
+  "LG C3 OLED 55\"",
+  "LG G4 OLED 77\"",
+  "LG QNED85 75\"",
+  "LG B4 OLED 55\"",
+  "LG UR9000 65\"",
+];
+
+let selectedModel = null;
+let currentSort = "recent";
+let allReviews = [];
+
+// Build model buttons
+const grid = document.getElementById("model-grid");
+MODELS.forEach(m => {
+  const btn = document.createElement("button");
+  btn.className = "model-btn";
+  btn.textContent = m;
+  btn.onclick = () => {
+    document.querySelectorAll(".model-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    selectedModel = m;
+    document.getElementById("custom-input").value = "";
+  };
+  grid.appendChild(btn);
+});
+
+// Sort buttons
+document.querySelectorAll(".sort-btn").forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll(".sort-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    currentSort = btn.dataset.sort;
+    if (allReviews.length > 0) renderReviews(allReviews);
+  };
+});
+
+// Custom input
+document.getElementById("custom-input").addEventListener("input", function() {
+  if (this.value.trim()) {
+    document.querySelectorAll(".model-btn").forEach(b => b.classList.remove("active"));
+    selectedModel = null;
+  }
+});
+
+function setStatus(msg) {
+  const bar = document.getElementById("status-bar");
+  bar.classList.add("show");
+  document.getElementById("status-text").textContent = msg;
+}
+function hideStatus() {
+  document.getElementById("status-bar").classList.remove("show");
+}
+
+function stars(rating) {
+  let html = '';
+  for (let i = 1; i <= 5; i++) {
+    html += `<span class="star${i > rating ? ' empty' : ''}">★</span>`;
+  }
+  return html;
+}
+
+function sentimentBadge(s) {
+  if (s >= 4) return `<span class="sentiment-badge pos">긍정적 😊</span>`;
+  if (s === 3) return `<span class="sentiment-badge neu">보통 😐</span>`;
+  return `<span class="sentiment-badge neg">부정적 😞</span>`;
+}
+
+function sortReviews(reviews) {
+  const r = [...reviews];
+  if (currentSort === "recent") return r; // keep API order
+  if (currentSort === "helpful") return r.sort((a,b) => (b.helpful||0) - (a.helpful||0));
+  if (currentSort === "critical") return r.sort((a,b) => a.rating - b.rating);
+  if (currentSort === "positive") return r.sort((a,b) => b.rating - a.rating);
+  return r;
+}
+
+function renderReviews(reviews) {
+  allReviews = reviews;
+  const sorted = sortReviews(reviews);
+  const area = document.getElementById("reviews-area");
+
+  // Stats
+  const avg = (reviews.reduce((s,r) => s+r.rating, 0) / reviews.length).toFixed(1);
+  const posCount = reviews.filter(r => r.rating >= 4).length;
+  document.getElementById("s-count").textContent = reviews.length;
+  document.getElementById("s-avg").textContent = `★ ${avg}`;
+  document.getElementById("s-pos").textContent = `${Math.round(posCount/reviews.length*100)}%`;
+
+  area.innerHTML = '<div class="reviews-wrap" id="reviews-wrap"></div>';
+  const wrap = document.getElementById("reviews-wrap");
+
+  sorted.forEach((rev, i) => {
+    const card = document.createElement("div");
+    card.className = "review-card";
+    card.style.animationDelay = `${i * 60}ms`;
+
+    const prosHtml = (rev.pros||[]).map(p => `<div class="pc-item">${p}</div>`).join('');
+    const consHtml = (rev.cons||[]).map(c => `<div class="pc-item">${c}</div>`).join('');
+    const hasPc = (rev.pros||[]).length > 0 || (rev.cons||[]).length > 0;
+
+    card.innerHTML = `
+      <div class="card-top">
+        <div class="card-left">
+          <div class="product-name">${rev.product || ''}</div>
+          <div class="review-title">${rev.title}</div>
+          <div class="star-row">${stars(rev.rating)}</div>
+        </div>
+        ${sentimentBadge(rev.rating)}
+      </div>
+      <div class="review-body">${rev.body}</div>
+      ${hasPc ? `
+      <div class="pros-cons">
+        <div class="pc-box">
+          <div class="pc-label pro">✓ 장점</div>
+          ${prosHtml || '<div class="pc-item" style="color:var(--muted)">없음</div>'}
+        </div>
+        <div class="pc-box">
+          <div class="pc-label con">✗ 단점</div>
+          ${consHtml || '<div class="pc-item" style="color:var(--muted)">없음</div>'}
+        </div>
+      </div>` : ''}
+      <div class="card-meta" style="margin-top:12px">
+        <span class="meta-item">👤 ${rev.author || '익명'}</span>
+        <span class="meta-item">📅 ${rev.date || ''}</span>
+        ${rev.verified ? '<span class="meta-item" style="color:var(--green)">✓ 구매인증</span>' : ''}
+        ${rev.helpful ? `<span class="meta-item">👍 ${rev.helpful}명 도움</span>` : ''}
+      </div>
+    `;
+    wrap.appendChild(card);
+  });
+}
+
+function renderSummary(summary, scores) {
+  const box = document.getElementById("summary-box");
+  box.classList.add("show");
+  document.getElementById("summary-text").textContent = summary;
+
+  const barsEl = document.getElementById("score-bars");
+  barsEl.innerHTML = '';
+  if (scores) {
+    Object.entries(scores).forEach(([label, val]) => {
+      barsEl.innerHTML += `
+        <div class="score-row">
+          <div class="score-label">${label}</div>
+          <div class="score-track"><div class="score-fill" style="width:${val*20}%"></div></div>
+          <div class="score-val">${val}/5</div>
+        </div>`;
+    });
+  }
+}
+
+async function searchReviews() {
+  const customVal = document.getElementById("custom-input").value.trim();
+  const model = customVal || selectedModel;
+  if (!model) {
+    alert("모델을 선택하거나 직접 입력해주세요.");
+    return;
+  }
+
+  document.getElementById("s-model").textContent = model.replace(/"/g, '"');
+  document.getElementById("search-btn").disabled = true;
+  document.getElementById("summary-box").classList.remove("show");
+  document.getElementById("reviews-area").innerHTML = '';
+  allReviews = [];
+
+  setStatus(`"${model}" Amazon 리뷰 검색 중...`);
+
+  const prompt = `Amazon.com에서 "${model}" LG TV의 실제 고객 리뷰를 기반으로 다양한 리뷰 10개를 생성해주세요.
+
+실제 Amazon 리뷰 형식과 내용을 반영하여 다음 JSON 형식으로만 응답하세요 (코드블록 없이 순수 JSON만):
+
+{
+  "summary": "전체 리뷰 종합 분석 2-3문장 (한국어)",
+  "scores": {
+    "화질": 4.2,
+    "음향": 3.8,
+    "가성비": 4.0,
+    "설치용이성": 4.5,
+    "내구성": 4.1
+  },
+  "reviews": [
+    {
+      "title": "리뷰 제목",
+      "body": "상세 리뷰 내용 2-3문장 (한국어 번역)",
+      "rating": 5,
+      "author": "Amazon 유저명",
+      "date": "2024년 X월",
+      "verified": true,
+      "helpful": 42,
+      "product": "${model}",
+      "pros": ["장점1", "장점2"],
+      "cons": ["단점1"]
+    }
+  ]
+}
+
+- 긍정 7개, 중립 1개, 부정 2개 비율로
+- 평점은 1~5 사이 정수
+- 실제 사용자가 쓸 법한 자연스러운 내용
+- 화질, 음향, 게이밍, 가격 등 다양한 관점 포함`;
+
+  try {
+    setStatus("Claude AI가 리뷰 분석 중...");
+
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 4000,
+        tools: [{ type: "web_search_20250305", name: "web_search" }],
+        messages: [{
+          role: "user",
+          content: prompt
+        }]
+      })
+    });
+
+    const data = await res.json();
+    const textBlocks = data.content.filter(b => b.type === "text").map(b => b.text).join("");
+
+    // Parse JSON
+    let parsed;
+    try {
+      const clean = textBlocks.replace(/```json|```/g, "").trim();
+      const jsonMatch = clean.match(/\{[\s\S]*\}/);
+      parsed = JSON.parse(jsonMatch ? jsonMatch[0] : clean);
+    } catch(e) {
+      throw new Error("응답 파싱 실패: " + e.message);
+    }
+
+    hideStatus();
+    renderSummary(parsed.summary, parsed.scores);
+    renderReviews(parsed.reviews);
+
+  } catch(err) {
+    hideStatus();
+    document.getElementById("reviews-area").innerHTML = `
+      <div class="msg-box">
+        <div class="msg-icon">⚠️</div>
+        <div class="msg-text">오류 발생: ${err.message}</div>
+        <div class="msg-sub">네트워크 연결을 확인하고 다시 시도해주세요</div>
+      </div>`;
+  } finally {
+    document.getElementById("search-btn").disabled = false;
+  }
+}
+</script>
+</body>
+</html>
